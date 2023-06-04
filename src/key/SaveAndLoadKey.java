@@ -22,17 +22,21 @@ public class SaveAndLoadKey {
 			}
 		
 	}
-	public void loadKey(String fileName) throws ClassNotFoundException {
+	public Key loadKey(String fileName) throws ClassNotFoundException {
+		Key key = null;
 		try(FileInputStream fileStream = new FileInputStream(fileName); // 직렬화해서 썼던 파일을 다시 읽오는 역할
 				ObjectInputStream objectInputStream = new ObjectInputStream(fileStream))
 		{
 			Object secretKey= objectInputStream.readObject();
-			Key Key =(Key)secretKey;
-			System.out.println(Key.getEncoded());
+			key =(Key)secretKey;
+			
+			System.out.println(key.getEncoded());
+			return key;
 		}catch(IOException e) 
 		{
 			e.printStackTrace();
 		}
+		return key;
 	}
 	
 
