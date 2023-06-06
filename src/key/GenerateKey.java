@@ -24,8 +24,8 @@ public class GenerateKey {
 		
 		SaveAndLoadKey saveloadkey = new SaveAndLoadKey();
 		
-		saveloadkey.saveKey(myKeyPair.getPublicKey(), publicKeyFile);
-		saveloadkey.saveKey(myKeyPair.getPrivateKey(), privateKeyFile);
+		saveloadkey.savePublicKey(myKeyPair.getPublicKey(), publicKeyFile);
+		saveloadkey.savePrivateKey(myKeyPair.getPrivateKey(), privateKeyFile);
 		
 	}
 }

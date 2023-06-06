@@ -1,102 +1,58 @@
 package digitalSign;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.util.Arrays;
+import java.util.Base64;
+
+import javax.crypto.Cipher;
+
+import javax.crypto.SecretKey;
+
+import key.SaveAndLoadKey;
 
 
-class DigitSign {
-	private static final String algorithm = "SHA1withRSA";
-	
-
-	byte [] sign(String dataFilename, PrivateKey privateKey) 
-			throws InvalidKeyException {
-
-		byte[] content = readFile(dataFilename);
-		byte [] signature = null;
-		
-		Signature sig;
-		try {
-			sig = Signature.getInstance(algorithm);
-			sig.initSign(privateKey);
-			sig.update(content);
-			signature = sig.sign();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SignatureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			Arrays.fill(content, (byte) ' ');
-		}
-		
-		return signature;
-	}
-	
-	boolean verify(String dataFilename, PublicKey publicKey, String sigFilename) 
-			throws InvalidKeyException, FileNotFoundException {
-		byte [] originContent = readFile(dataFilename);
-		byte [] signedContent = readFile(sigFilename);
-		boolean rslt = false;
-		
-		try {
-			Signature sig = Signature.getInstance(algorithm);
-			
-			sig.initVerify(publicKey);
-			sig.update(originContent);
-			
-			rslt = sig.verify(signedContent);
-			
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SignatureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			Arrays.fill(originContent, (byte) ' ');
-			Arrays.fill(signedContent, (byte) ' ');
-		}
-		
-		return rslt;
-	}
-	
-	byte [] readFile(String filename) {
-		byte [] readBuffer = null;
-
-	    try (FileInputStream fileStream = new FileInputStream( filename )) {
-
-
-	       readBuffer = new byte[ fileStream.available( ) ];
-	       while (fileStream.read( readBuffer ) != -1) {}
-	       
-
-	    } catch ( IOException e ) {
-	            System.out.println(e);
-	    } 
-	    
-	    return readBuffer;
-	}
-	
-	void writeFile(String filename, byte [] content) throws FileNotFoundException {
-		
-		try (FileOutputStream outputStream = new FileOutputStream(filename)){
-			outputStream.write(content);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			throw new FileNotFoundException();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
+public class DigitSign {
+  
+   final static String SIGNALGORITHM = "SHA256withRSA";
+   //private static final String AES_ALGO = "AES";
+   protected static FileInputOutput fileIO = new FileInputOutput();
+   public static String sign(String fileName,String PrivateKeyName) throws ClassNotFoundException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException {
+       
+    	   SaveAndLoadKey saveloadkey = new SaveAndLoadKey();
+           PrivateKey privateKey = saveloadkey.PrivateloadKey(PrivateKeyName);
+           Signature privateSignature = Signature.getInstance("SHA256withRSA");
+           privateSignature.initSign(privateKey);
+           byte[] datafile = fileIO.readFile(fileName);
+           privateSignature.update(datafile);
+           byte[] signature = privateSignature.sign();
+           return Base64.getEncoder().encodeToString(signature);
+   }
+   public static boolean verifySignarue(String fileName, String signature, String PublicKeyName) throws ClassNotFoundException, IOException {
+       Signature sig;
+       try {
+    	   SaveAndLoadKey saveloadkey = new SaveAndLoadKey();
+           PublicKey publicKey = saveloadkey.PublicloadKey(PublicKeyName);
+           sig = Signature.getInstance("SHA256withRSA");
+           sig.initVerify(publicKey);
+           byte[] datafile = fileIO.readFile(fileName);
+           sig.update(datafile);
+           if (!sig.verify(Base64.getDecoder().decode(signature)));
+       } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+           throw new RuntimeException(e);
+       }
+       return true;
+   }
 }
